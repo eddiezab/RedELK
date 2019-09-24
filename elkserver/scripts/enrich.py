@@ -297,7 +297,7 @@ if __name__ == '__main__':
     setTags('testsystems_v01',r2)
     numRes = len(r) + len(r2)
     tagsSet = tagsSet + numRes
-    rTt = rTt +rT + rT2
+    rTt = rTt +rT['value'] + rT2['value']
     #time.sleep(10) #allow ES to process all updated before requerying
   print("Summary: date: %s, tagsSet: %s, Function:testsystems (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
 
@@ -312,7 +312,7 @@ if __name__ == '__main__':
     setTags('sandboxes_v01',r2)
     numRes = len(r) + len(r2)
     tagsSet = tagsSet + numRes
-    rTt = rTt +rT + rT2
+    rTt = rTt +rT['value'] + rT2['value']
   print("Summary: date: %s, tagsSet: %s, Function:sandboxes (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
 
   ipList = '/etc/redelk/torexitnodes.conf'
