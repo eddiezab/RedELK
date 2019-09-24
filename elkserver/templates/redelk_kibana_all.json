@@ -114,7 +114,7 @@
       "description": "",
       "hits": 0,
       "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"index\":\"redirhaproxy\",\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[]}"
+        "searchSourceJSON": "{\"index\":\"redirector\",\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[]}"
       },
       "sort": [
         "@timestamp",
@@ -200,7 +200,7 @@
     "attributes": {
       "description": "",
       "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"index\":\"redirhaproxy\",\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[]}"
+        "searchSourceJSON": "{\"index\":\"redirector\",\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[]}"
       },
       "title": "Redirector Traffic All",
       "uiStateJSON": "{\"mapCenter\":[32.93684850365019,0.7170999376103283],\"mapZoom\":2}",
@@ -214,7 +214,7 @@
     "attributes": {
       "description": "",
       "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"index\":\"redirhaproxy\",\"query\":{\"language\":\"lucene\",\"query\":\"NOT (haproxy_dest: cobalt*)\"},\"filter\":[]}"
+        "searchSourceJSON": "{\"index\":\"redirector\",\"query\":{\"language\":\"lucene\",\"query\":\"NOT (haproxy_dest: cobalt*)\"},\"filter\":[]}"
       },
       "title": "Redirector Traffic All - decoy traffic",
       "uiStateJSON": "{\"mapCenter\":[32.93684850365019,0.7170999376103283],\"mapZoom\":2}",
@@ -228,7 +228,7 @@
     "attributes": {
       "description": "",
       "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"index\":\"redirhaproxy\",\"query\":{\"language\":\"lucene\",\"query\":\"(haproxy_dest: cobalt*)\"},\"filter\":[]}"
+        "searchSourceJSON": "{\"index\":\"redirector\",\"query\":{\"language\":\"lucene\",\"query\":\"(haproxy_dest: cobalt*)\"},\"filter\":[]}"
       },
       "title": "Redirector Traffic All - CS traffic",
       "uiStateJSON": "{\"mapCenter\":[32.93684850365019,0.7170999376103283],\"mapZoom\":2}",
@@ -317,7 +317,7 @@
       "description": "",
       "version": 1,
       "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"index\":\"redirhaproxy\",\"query\":{\"language\":\"lucene\",\"query\":\"NOT ffff AND NOT \\\"SSL handshake failure\\\" AND haproxy_request: \\\"GET /icon/getPixel.png\\\"\"},\"filter\":[]}"
+        "searchSourceJSON": "{\"index\":\"redirector\",\"query\":{\"language\":\"lucene\",\"query\":\"NOT ffff AND NOT \\\"SSL handshake failure\\\" AND haproxy_request: \\\"GET /icon/getPixel.png\\\"\"},\"filter\":[]}"
       }
     }
   },
