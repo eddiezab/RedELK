@@ -38,7 +38,7 @@ class greynoise():
     #
     def queryIpAPI(self,ip):
         data = {'ip':ip}
-        url = 'http://api.greynoise.io:8888/v1/query/ip'
+        url = 'https://api.greynoise.io/v1/query/ip'
         greynoise = requests.post(url,data=data)
         r = {}
         r['full_data'] = greynoise.json()

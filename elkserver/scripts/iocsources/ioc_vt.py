@@ -42,8 +42,8 @@ class VT():
       json_response = None
     return(response.status_code,json_response)
   #
-  def test(self,list):
-    l = list
+  def test(self,test_list):
+    l = test_list
     qlist = []
     qlist1h = []
     now = time.time()

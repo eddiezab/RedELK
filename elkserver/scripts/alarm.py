@@ -21,7 +21,7 @@ def pprint(r):
  s = json.dumps(r, indent=2, sort_keys=True)
  return(s)
 
-def getQuery(query,size="5000",index="redirhaproxy-*"):
+def getQuery(query,size="5000",index="redirector-*"):
   #NOT tags:enriched_v01 AND NOT cslogtype:beacon_newbeacon AND cslogtype:beacon_*
   q3 = {'query': {'query_string': {'query': query }}}
   r3 = es.search(index=index, body=q3, size=size)
@@ -29,11 +29,11 @@ def getQuery(query,size="5000",index="redirhaproxy-*"):
     return(None)
   return(r3['hits']['hits'])
 
-def countQuery(query,index="redirhaproxy-*"):
+def countQuery(query,index="redirector-*"):
   #NOT tags:enriched_v01 AND NOT cslogtype:beacon_newbeacon AND cslogtype:beacon_*
   q3 = {'query': {'query_string': {'query': query }}}
   r3 = es.search(index=index, body=q3, size=0)
-  return(r3['hits']['total'])
+  return(r3['hits']['total']['value'])
 
 def setTags(tag,lst):
   for l in lst:
@@ -76,7 +76,7 @@ class alarm():
 
   def alarm_check1(self):
     ## This check queries for IP's that aren't listed in any iplist* but do talk to cobaltstrike* paths on redirectors\n
-    q = "NOT tags:iplist_* AND haproxy_dest:cobaltstrike* AND NOT tags:ALARMED_* AND tags:enrich_*"
+    q = "NOT tags:iplist_* AND redirector_traffic_type:teamserver* AND NOT tags:ALARMED_* AND tags:enrich_*"
     i = countQuery(q)
     if i >= 10000: i = 10000
     r = getQuery(q,i)
@@ -236,11 +236,11 @@ class alarm():
     qSub = ""
     for keyword in keywords:
       if qSub == "":
-        qSub = "(haproxy_useragent:%s"%keyword
-        qSub = qSub + " OR haproxy_useragent:%s"%keyword
+        qSub = "(user_agent.original:%s"%keyword
+        qSub = qSub + " OR user_agent.original:%s"%keyword
     qSub = qSub + ") "
 
-    q = "%s AND haproxy_dest:cobaltstrike* AND tags:enrich_* AND NOT tags:ALARMED_* "%qSub
+    q = "%s AND redirector_traffic_type:teamserver* AND tags:enrich_* AND NOT tags:ALARMED_* "%qSub
     i = countQuery(q)
     print("[q] querying %s"%q)
     if i >= 10000: i = 10000
@@ -306,7 +306,7 @@ if __name__ == '__main__':
   except:
     pass
   mail = mail + "</body></html>\n"
-  if count >= 1:
+  if count >= 1 and len(config.smtpSrv)>  0:
     from SendMail import *
     smtpResp = SendMail(config.toAddrs,mail,"Alarm from %s"%socket.gethostname())
     #for to in config.toAddrs:
