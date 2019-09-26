@@ -30,10 +30,12 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 
 # Start script to create thumbnails of received screenshots
 # m h dom mon dow user  command
-*/2 * * * * redelk /usr/share/redelk/bin/makethumbnail.py /var/www/html/cslogs/
+*/2 * * * * redelk /usr/share/redelk/bin/makethumbnail.py /opt/cs-data
 
 # Start the enrichment of beacon data in ELK
 * * * * * redelk /usr/share/redelk/bin/run_enrich.sh 
 
 # Start the checks for alarms
 */5 * * * * redelk /usr/share/redelk/bin/run_alarm.sh
+
+* * * * * redelk /usr/bin/python3 /usr/share/redelk/bin/gsoc_enrich.py
