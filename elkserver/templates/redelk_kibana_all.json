@@ -98,32 +98,7 @@
       "version": 1
     }
   },
-  {
-    "id": "0f7dcd70-b982-11e8-94dd-171ae5c1fd1a",
-    "type": "search",
-    "attributes": {
-      "columns": [
-        "attackscenario",
-        "beat.name",
-        "haproxy_dest",
-        "src_ip",
-        "src_dns",
-        "geoip.as_org",
-        "haproxy_request"
-      ],
-      "description": "",
-      "hits": 0,
-      "kibanaSavedObjectMeta": {
-        "searchSourceJSON": "{\"index\":\"redirector\",\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[]}"
-      },
-      "sort": [
-        "@timestamp",
-        "desc"
-      ],
-      "title": "Redirector Traffic",
-      "version": 1
-    }
-  },
+  {"attributes":{"columns":["attackscenario","beat.name","nginx.access.virtual_host","redirector_traffic_type","src_ip","src_dns","geoip.as_org","nginx.access.info"],"description":"","hits":0,"kibanaSavedObjectMeta":{"searchSourceJSON":"{\"highlightAll\":true,\"version\":true,\"query\":{\"language\":\"lucene\",\"query\":\"\"},\"filter\":[],\"indexRefName\":\"kibanaSavedObjectMeta.searchSourceJSON.index\"}"},"sort":["@timestamp","desc"],"title":"Redirector Traffic","version":1},"id":"0f7dcd70-b982-11e8-94dd-171ae5c1fd1a","migrationVersion":{"search":"7.0.0"},"references":[{"id":"redirector","name":"kibanaSavedObjectMeta.searchSourceJSON.index","type":"index-pattern"}],"type":"search","version":"WzM5LDFd"},
   {
     "id": "f0dcbda0-b8e5-11e8-94dd-171ae5c1fd1a",
     "type": "visualization",

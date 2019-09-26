@@ -306,9 +306,10 @@ if __name__ == '__main__':
   except:
     pass
   mail = mail + "</body></html>\n"
-  if count >= 1 and len(config.smtpSrv)>  0:
-    from SendMail import *
-    smtpResp = SendMail(config.toAddrs,mail,"Alarm from %s"%socket.gethostname())
+  if count >= 1:
+    if len(config.smtpSrv)>  0:
+      from SendMail import *
+      smtpResp = SendMail(config.toAddrs,mail,"Alarm from %s"%socket.gethostname())
     #for to in config.toAddrs:
     #  print("[a] mail to %s from %s"%(to,config.toAddrs))
     #  smtpResp = SendMail(to,mail,"Alarm from RedELK")
