@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 import json
+import re
 
 def pprint(r):
     print(json.dumps(r, indent=2, sort_keys=True))
@@ -50,8 +51,37 @@ class EnrichmentPlugin(object):
     def run(self):
         pass
 
+class LostAssetEnrichment(EnrichmentPlugin):
+    state_file = "/etc/redelk/lost_assets.conf"
 
-class ASNEnrichmentPlugin(EnrichmentPlugin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.lost_assets = [ {"asset": asset.split(";")[0], "reason": asset.split(";")[1]} for asset in self.state ]
+
+    def run(self):
+        updated_records = []
+
+        query = " OR ".join([ f"target_hostname:~{asset['asset']}~" for asset in self.lost_assets])
+        query = f"NOT reason_lost:* AND ({query})"
+        query = re.sub(r"~", r'"', query)
+
+        for result in self.run_query("beacondb", query):
+            target_hostname = result["_source"]["target_hostname"]
+            lost_asset = list(filter(lambda x: x["asset"] == target_hostname, self.lost_assets))
+
+            result["_source"]["reason_lost"] = lost_asset[0]["reason"]
+
+            self.es.update(index=result["_index"],
+                doc_type=result["_type"],
+                id=result["_id"],
+                body={"doc":result["_source"]})
+
+            updated_records.append(result)
+
+        return updated_records
+
+class ASNEnrichment(EnrichmentPlugin):
     state_file = "/etc/redelk/known_asns.conf"
 
     index_pattern_filter_maps = [{
