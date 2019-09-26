@@ -66,18 +66,19 @@ class LostAssetEnrichment(EnrichmentPlugin):
         query = f"NOT reason_lost:* AND ({query})"
         query = re.sub(r"~", r'"', query)
 
-        for result in self.run_query("beacondb", query):
-            target_hostname = result["_source"]["target_hostname"]
-            lost_asset = list(filter(lambda x: x["asset"] == target_hostname, self.lost_assets))
+        for index_pattern in ["beacondb", "rtops-*"]:
+            for result in self.run_query(index_pattern, query):
+                target_hostname = result["_source"]["target_hostname"]
+                lost_asset = list(filter(lambda x: x["asset"] == target_hostname, self.lost_assets))
 
-            result["_source"]["reason_lost"] = lost_asset[0]["reason"]
+                result["_source"]["reason_lost"] = lost_asset[0]["reason"]
 
-            self.es.update(index=result["_index"],
-                doc_type=result["_type"],
-                id=result["_id"],
-                body={"doc":result["_source"]})
+                self.es.update(index=result["_index"],
+                    doc_type=result["_type"],
+                    id=result["_id"],
+                    body={"doc":result["_source"]})
 
-            updated_records.append(result)
+                updated_records.append(result)
 
         return updated_records
 
