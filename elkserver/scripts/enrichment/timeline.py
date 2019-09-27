@@ -1,4 +1,4 @@
-from .base import EnrichmentPlugin
+from .base import EnrichmentPlugin, NotFoundError
 from dateutil import parser as date_parser
 
 
@@ -11,17 +11,20 @@ class TimelineEnrichement(EnrichmentPlugin):
             "size": "0",
             "aggs": {
                 "unique_hosts": {
-                    "terms": {"field": "target_hostname.keyword"}
+                    "terms": {"field": "target_hostname"}
                 }
             }
         }
 
-        unique_hosts = self.run_raw_query(
-            TIMELINE_INDEX,
-            query,
-            lambda x: [y['key'] for y in x['aggregations']['unique_hosts']['buckets']])
+        try:
+            return self.run_raw_query(
+                TIMELINE_INDEX,
+                query,
+                lambda x: [y['key'] for y in x['aggregations']['unique_hosts']['buckets']])
+        except:
+            pass
 
-        return unique_hosts
+        return []
 
     def get_beacondb_hosts(self):
         query = {
@@ -44,24 +47,27 @@ class TimelineEnrichement(EnrichmentPlugin):
                 }},
             "aggs": {
                 "unique_hosts": {
-                    "terms": {"field": "target_hostname.keyword"}
+                    "terms": {"field": "target_hostname"}
                 }
             }
         }
 
-        unique_hosts = self.run_raw_query(
-            "beacondb",
-            query,
-            lambda x: [y['key'] for y in x['aggregations']['unique_hosts']['buckets']])
+        try:
+            return self.run_raw_query(
+                "beacondb",
+                query,
+                lambda x: [y['key'] for y in x['aggregations']['unique_hosts']['buckets']])
+        except:
+            pass
 
-        return unique_hosts
+        return []
 
     def run(self):
 
         beacon_db_hosts = self.get_beacondb_hosts()
         timeline_hosts = self.get_timeline_hosts()
 
-        removed_hosts = list(set(beacon_db_hosts) - set(timeline_hosts))
+        removed_hosts = list(set(timeline_hosts)-set(beacon_db_hosts))
 
         for host in beacon_db_hosts:
 
@@ -73,28 +79,43 @@ class TimelineEnrichement(EnrichmentPlugin):
                 "detection_type": None
             }
 
+
             try:
-                host_timeline = self.run_query(
-                    TIMELINE_INDEX,
-                    f'target_hostname.raw:{host}'
-                )[0]
-            except:
+                tmp_host_timeline = self.run_query(
+                        TIMELINE_INDEX,
+                        f'target_hostname:{host}'
+                )
+
+                if len(tmp_host_timeline) == 1:
+                    host_timeline = tmp_host_timeline[0]
+
+                assert len(tmp_host_timeline) <= 1
+            except NotFoundError:
                 pass
 
-            host_checkins = self.run_query(
-                "rtops-*", f"target_hostname.raw:{host} AND beacon_checkin:*")
+            new_beacons = self.run_query(
+                "rtops-*",
+                f"target_hostname:{host} AND cslogtype:beacon_newbeacon"
+            )
 
-            if len(host_checkins) == 0:
-                print(f"No host check-ins for {host}")
-                continue
-
-            host_checkins.sort(key=lambda x: date_parser.parse(
+            new_beacons.sort(key=lambda x: date_parser.parse(
                 x["_source"]['@timestamp']))
+
+            last_beacon = new_beacons[-1]
+
+            last_checkin = self.run_query(
+                "rtops-*", f"beacon_checkin:* AND beacon_id:{last_beacon['_source']['beacon_id']}")
+            last_checkin.sort(key=lambda x: date_parser.parse(
+                x["_source"]['@timestamp']))
+
+            if len(last_checkin) == 0:
+                last_checkin = new_beacons
+
 
             if '_id' in host_timeline:
                 print(f"Updating timeline for {host}")
-                host_timeline["_source"]["start_date"] = host_checkins[0]["_source"]["@timestamp"]
-                host_timeline["_source"]["end_date"] = host_checkins[-1]["_source"]["@timestamp"]
+                host_timeline["_source"]["start_date"] = date_parser.parse(new_beacons[0]["_source"]["@timestamp"]).date()
+                host_timeline["_source"]["end_date"] = date_parser.parse(last_checkin[-1]["_source"]["@timestamp"]).date()
 
                 self.es.update(index=TIMELINE_INDEX,
                                doc_type=host_timeline["_type"],
@@ -104,8 +125,10 @@ class TimelineEnrichement(EnrichmentPlugin):
             else:
                 print(f"Creating new timeline for {host}")
                 print(host_timeline)
-                host_timeline["start_date"] = host_checkins[0]["_source"]["@timestamp"]
-                host_timeline["end_date"] = host_checkins[-1]["_source"]["@timestamp"]
+                host_timeline["start_date"] = date_parser.parse(new_beacons[0]["_source"]["@timestamp"]).date()
+                host_timeline["end_date"] = date_parser.parse(last_checkin[-1]["_source"]["@timestamp"]).date()
                 self.es.index(TIMELINE_INDEX, body=host_timeline)
 
 
+        for removed_host in removed_hosts:
+           self.es.delete_by_query(index=TIMELINE_INDEX, body=self.get_query_json(f"target_hostname:{removed_host}"))

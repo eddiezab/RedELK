@@ -1,4 +1,5 @@
 from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import NotFoundError
 import json
 import re
 
@@ -65,7 +66,7 @@ class LostAssetEnrichment(EnrichmentPlugin):
     def run(self):
         updated_records = []
 
-        query = " OR ".join([ f"target_hostname.raw:{asset['asset']}" for asset in self.lost_assets])
+        query = " OR ".join([ f"target_hostname:{asset['asset']}" for asset in self.lost_assets])
         query = f"NOT reason_lost:* AND ({query})"
         query = re.sub(r"~", r'"', query)
 
