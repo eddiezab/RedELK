@@ -36,17 +36,20 @@ class EnrichmentPlugin(object):
             }
         }
 
-    def run_query(self, index_pattern, query, transform_result=False):
+    def run_raw_query(self, index_pattern, query, transform_result=False):
         result = self.es.search(
             index=index_pattern,
             size=self.queue_size,
-            body=self.get_query_json(query)
+            body=query
         )
 
         if transform_result:
-            return transform_result(result["hits"]["hits"])
+            return transform_result(result)
 
         return result["hits"]["hits"]
+
+    def run_query(self, index_pattern, query, transform_result=False):
+        return self.run_raw_query(index_pattern, self.get_query_json(query), transform_result)
 
     def run(self):
         pass
