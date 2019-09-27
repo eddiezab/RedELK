@@ -102,7 +102,7 @@ def queryFromConfig(line,index="beacondb"):
  f2 = lineA[2]
  f3 = lineA[3]
  q3 = {'query': {'query_string': {'query': 'FILLME'}}}
- query =  "NOT (tags:sandboxes_v01 OR tags:testsystems_v01) AND (target_user:%s %s target_hostname.raw:%s %s target_ipint:%s)"%(f1,q,f2,q,f3)
+ query =  "NOT (tags:sandboxes_v01 OR tags:testsystems_v01) AND (target_user:%s %s target_hostname:%s %s target_ipint:%s)"%(f1,q,f2,q,f3)
  q3['query']['query_string']['query'] = query
  #print(query)
  r3 = es.search(index=index, size=qSize, body=q3)
