@@ -76,13 +76,13 @@ class TimelineEnrichement(EnrichmentPlugin):
             try:
                 host_timeline = self.run_query(
                     TIMELINE_INDEX,
-                    f'target_hostname:"{host}"'
+                    f'target_hostname.raw:{host}'
                 )[0]
             except:
                 pass
 
             host_checkins = self.run_query(
-                "rtops-*", f"target_hostname:'{host}' AND beacon_checkin:*")
+                "rtops-*", f"target_hostname.raw:{host} AND beacon_checkin:*")
 
             if len(host_checkins) == 0:
                 print(f"No host check-ins for {host}")
