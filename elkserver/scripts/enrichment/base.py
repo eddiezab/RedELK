@@ -75,6 +75,9 @@ class LostAssetEnrichment(EnrichmentPlugin):
                 target_hostname = result["_source"]["target_hostname"]
                 lost_asset = list(filter(lambda x: x["asset"] == target_hostname, self.lost_assets))
 
+                if len(lost_asset) != 1:
+                    continue
+
                 result["_source"]["reason_lost"] = lost_asset[0]["reason"]
 
                 self.es.update(index=result["_index"],
