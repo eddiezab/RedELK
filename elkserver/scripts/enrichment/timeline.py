@@ -11,7 +11,7 @@ class TimelineEnrichement(EnrichmentPlugin):
             "size": "0",
             "aggs": {
                 "unique_hosts": {
-                    "terms": {"field": "target_hostname"}
+                    "terms": {"field": "target_hostname.keyword"}
                 }
             }
         }
@@ -47,7 +47,7 @@ class TimelineEnrichement(EnrichmentPlugin):
                 }},
             "aggs": {
                 "unique_hosts": {
-                    "terms": {"field": "target_hostname"}
+                    "terms": {"field": "target_hostname.keyword"}
                 }
             }
         }
@@ -83,7 +83,7 @@ class TimelineEnrichement(EnrichmentPlugin):
             try:
                 tmp_host_timeline = self.run_query(
                         TIMELINE_INDEX,
-                        f'target_hostname:{host}'
+                        f'target_hostname.keyword:{host}'
                 )
 
                 if len(tmp_host_timeline) == 1:
@@ -95,7 +95,7 @@ class TimelineEnrichement(EnrichmentPlugin):
 
             new_beacons = self.run_query(
                 "rtops-*",
-                f"target_hostname:{host} AND cslogtype:beacon_newbeacon"
+                f"target_hostname.keyword:{host} AND cslogtype:beacon_newbeacon"
             )
 
             new_beacons.sort(key=lambda x: date_parser.parse(
