@@ -102,7 +102,7 @@ def queryFromConfig(line,index="beacondb"):
  f2 = lineA[2]
  f3 = lineA[3]
  q3 = {'query': {'query_string': {'query': 'FILLME'}}}
- query =  "NOT (tags:sandboxes_v01 OR tags:testsystems_v01) AND (target_user:%s %s target_hostname:%s %s target_ipint:%s)"%(f1,q,f2,q,f3)
+ query =  "NOT (tags:sandboxes_v01 OR tags:testsystems_v01) AND (target_user:%s %s target_hostname.keyword:%s %s target_ipint:%s)"%(f1,q,f2,q,f3)
  q3['query']['query_string']['query'] = query
  #print(query)
  r3 = es.search(index=index, size=qSize, body=q3)
@@ -339,10 +339,6 @@ if __name__ == '__main__':
   tagsSet = 0
   tagsSet,rT = findIPLines(ipList,"iplist_alarmed_v01")
   print("Summary: date: %s, tagsSet: %s, Function:iplist_alarmed (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rT))
-
-  tagsSet = 0
-  tagsSet,TotalNotTagged = enrichV1()
-  print("Summary: date: %s, tagsSet: %s, Function:enrichV1 (total to tag is %s)"%(datetime.datetime.now(),tagsSet,TotalNotTagged))
 
   tagsSet = 0
   tagsSet,rT = enrich_greynoise()

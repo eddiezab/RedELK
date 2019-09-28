@@ -1,8 +1,43 @@
-from .base import EnrichmentPlugin, NotFoundError
+from .base import EnrichmentPlugin, NotFoundError, pprint
 from dateutil import parser as date_parser
 
 
 TIMELINE_INDEX = "beacon-timeline"
+
+class BeaconIdTagEnrichment(EnrichmentPlugin):
+    def get_newbeacon_events(self):
+        beacon_history = {}
+        for newbeacon in self.run_query("rtops-*", "cslogtype:beacon_newbeacon"):
+            if newbeacon["_source"]["beacon_id"] not  in beacon_history:
+                beacon_history[newbeacon["_source"]["beacon_id"]] = [newbeacon]
+            else:
+                beacon_history[newbeacon["_source"]["beacon_id"]].append(newbeacon)
+
+        return beacon_history
+
+    def get_untagged_rtops_by_id(self, beacon_id):
+        return self.run_query("rtops-*", f"beacon_id:{beacon_id} AND NOT target_hostname:*")
+
+    def tag_beacon(self, beacon_id, source_beacon):
+        for untagged in self.get_untagged_rtops_by_id(beacon_id):
+            for field in ["target_hostname","target_ipext","target_os","target_osversion","target_pid","target_user"]:
+                if field in source_beacon["_source"]:
+                    untagged["_source"][field] = source_beacon["_source"][field]
+
+            self.update(untagged)
+            
+    def run(self):
+        for beacon_id, beacon_info in self.get_newbeacon_events().items():
+            if len(beacon_info) == 1:
+                self.tag_beacon(beacon_id, beacon_info[0])                
+            else:
+                beacon_host_names = list(set([b["_source"]["target_hostname"] for b in beacon_info ]))
+                if len(beacon_host_names) == 1:
+                    for beacon in beacon_info:
+                        self.tag_beacon(beacon_id, beacon)                
+                else:
+                    print(beacon_host_names)
+            
 
 
 class TimelineEnrichement(EnrichmentPlugin):
@@ -62,6 +97,16 @@ class TimelineEnrichement(EnrichmentPlugin):
 
         return []
 
+    def get_reason_lost(self, host):
+        result = self.run_query(
+            "beacondb", 
+            f"target_hostname.keyword:{host} AND reason_lost:*")
+
+        if len(result) > 0:
+            return result[0]["_source"]["reason_lost"]
+
+        return "C2 Active"
+
     def run(self):
 
         beacon_db_hosts = self.get_beacondb_hosts()
@@ -114,19 +159,21 @@ class TimelineEnrichement(EnrichmentPlugin):
 
             if '_id' in host_timeline:
                 print(f"Updating timeline for {host}")
-                host_timeline["_source"]["start_date"] = date_parser.parse(new_beacons[0]["_source"]["@timestamp"]).date()
-                host_timeline["_source"]["end_date"] = date_parser.parse(last_checkin[-1]["_source"]["@timestamp"]).date()
 
-                self.es.update(index=TIMELINE_INDEX,
-                               doc_type=host_timeline["_type"],
-                               id=host_timeline["_id"],
-                               body={"doc": host_timeline["_source"]})
+                if host_timeline["_source"]["detection_type"] is None or host_timeline["_source"]["detection_type"] == "C2 Active":
+                    host_timeline["_source"]["detection_type"] = self.get_reason_lost(host)
+
+                host_timeline["_source"]["start_date"] = new_beacons[0]["_source"]["@timestamp"]
+                host_timeline["_source"]["end_date"] = last_checkin[-1]["_source"]["@timestamp"]
+
+                self.update(host_timeline, index=TIMELINE_INDEX)
 
             else:
                 print(f"Creating new timeline for {host}")
                 print(host_timeline)
-                host_timeline["start_date"] = date_parser.parse(new_beacons[0]["_source"]["@timestamp"]).date()
-                host_timeline["end_date"] = date_parser.parse(last_checkin[-1]["_source"]["@timestamp"]).date()
+                host_timeline["start_date"] = new_beacons[0]["_source"]["@timestamp"]
+                host_timeline["end_date"] = last_checkin[-1]["_source"]["@timestamp"]
+                host_timeline["detection_type"] = self.get_reason_lost(host)
                 self.es.index(TIMELINE_INDEX, body=host_timeline)
 
 

@@ -55,6 +55,15 @@ class EnrichmentPlugin(object):
     def run(self):
         pass
 
+    def update(self, document, index):
+        if index is None:
+            index = document["_index"]
+            
+        self.es.update(index=index,
+            doc_type=document["_type"],
+            id=document["_id"],
+            body={"doc":document["_source"]})
+
 class LostAssetEnrichment(EnrichmentPlugin):
     state_file = "/etc/redelk/lost_assets.conf"
 
