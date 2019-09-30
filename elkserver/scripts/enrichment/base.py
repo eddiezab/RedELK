@@ -55,10 +55,10 @@ class EnrichmentPlugin(object):
     def run(self):
         pass
 
-    def update(self, document, index):
+    def update(self, document, index=None):
         if index is None:
             index = document["_index"]
-            
+
         self.es.update(index=index,
             doc_type=document["_type"],
             id=document["_id"],
