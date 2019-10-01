@@ -105,42 +105,6 @@ class TimelineEnrichement(EnrichmentPlugin):
 
         return []
 
-    def get_beacondb_hosts(self):
-        query = {
-            "size": "0",
-            "query": {
-                "bool": {
-                    "must_not": [
-                        {
-                            "match_phrase": {
-                                "tags.keyword": "testsystems_v01"
-                            }
-                        },
-                        {
-                            "match_phrase": {
-                                "tags.keyword": "sandboxes_v01"
-                            }
-                        }
-                    ],
-                    "minimum_should_match": 1
-                }},
-            "aggs": {
-                "unique_hosts": {
-                    "terms": {"field": "target_hostname.keyword"}
-                }
-            }
-        }
-
-        try:
-            return self.run_raw_query(
-                "beacondb",
-                query,
-                lambda x: [y['key'] for y in x['aggregations']['unique_hosts']['buckets']])
-        except:
-            pass
-
-        return []
-
     def get_reason_lost(self, host):
         result = self.run_query(
             "beacondb",
@@ -225,3 +189,23 @@ class TimelineEnrichement(EnrichmentPlugin):
         for removed_host in removed_hosts:
             self.es.delete_by_query(index=TIMELINE_INDEX, body=self.get_query_json(
                 f"target_hostname:{removed_host}"))
+
+class BeaconAtrophyEnrichement(EnrichmentPlugin):
+    queue_size = 1
+
+    def run(self):
+        for host in self.get_beacondb_hosts():
+            query =f"target_hostname.keyword:{host} AND NOT beacon_input:*"
+            last_seen = self.run_query("rtops-*", query)[0]["_source"]["@timestamp"]
+
+            query =f"target_hostname.keyword:{host} AND beacon_input:*"
+            last_interaction = self.run_query("rtops-*", query)[0]["_source"]["@timestamp"]
+
+            beacon_atrophy = {
+                "host": host,
+                "last_seen": last_seen,
+                "last_interaction": last_interaction,
+                "atrophy": (date_parser.parse(last_seen) - date_parser.parse(last_interaction)).days
+            }
+
+            self.es.index("beacon-atrophy", body=beacon_atrophy)

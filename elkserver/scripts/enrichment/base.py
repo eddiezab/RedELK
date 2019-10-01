@@ -64,6 +64,42 @@ class EnrichmentPlugin(object):
             id=document["_id"],
             body={"doc":document["_source"]})
 
+    def get_beacondb_hosts(self):
+        query = {
+            "size": "0",
+            "query": {
+                "bool": {
+                    "must_not": [
+                        {
+                            "match_phrase": {
+                                "tags.keyword": "testsystems_v01"
+                            }
+                        },
+                        {
+                            "match_phrase": {
+                                "tags.keyword": "sandboxes_v01"
+                            }
+                        }
+                    ],
+                    "minimum_should_match": 1
+                }},
+            "aggs": {
+                "unique_hosts": {
+                    "terms": {"field": "target_hostname.keyword"}
+                }
+            }
+        }
+
+        try:
+            return self.run_raw_query(
+                "beacondb",
+                query,
+                lambda x: [y['key'] for y in x['aggregations']['unique_hosts']['buckets']])
+        except:
+            pass
+
+        return []
+
 class LostAssetEnrichment(EnrichmentPlugin):
     state_file = "/etc/redelk/lost_assets.conf"
 
