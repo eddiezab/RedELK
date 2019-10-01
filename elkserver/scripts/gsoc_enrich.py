@@ -5,4 +5,5 @@ if __name__ == "__main__":
     KnownSandboxEnrichment().run()
     ASNEnrichment().run()
     LostAssetEnrichment().run()
-    TimelineEnrichement().run()
+    TimelineEnrichment().run()
+    BeaconAtrophyEnrichment().run()

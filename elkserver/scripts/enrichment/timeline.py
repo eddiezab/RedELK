@@ -84,7 +84,7 @@ class BeaconIdTagEnrichment(EnrichmentPlugin):
                         x = 5
 
 
-class TimelineEnrichement(EnrichmentPlugin):
+class TimelineEnrichment(EnrichmentPlugin):
     def get_timeline_hosts(self):
         query = {
             "size": "0",
@@ -190,7 +190,7 @@ class TimelineEnrichement(EnrichmentPlugin):
             self.es.delete_by_query(index=TIMELINE_INDEX, body=self.get_query_json(
                 f"target_hostname:{removed_host}"))
 
-class BeaconAtrophyEnrichement(EnrichmentPlugin):
+class BeaconAtrophyEnrichment(EnrichmentPlugin):
     queue_size = 1
 
     def run(self):
