@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import NotFoundError
+from .gsoc_alarm import PushoverAlarm
 import json
 import re
 
@@ -14,6 +15,10 @@ class EnrichmentPlugin(object):
     state_file = None
     state = []
 
+
+    def alarm(self, title, message):
+        PushoverAlarm.alert(title, message)
+        
     def __init__(self, *args, **kwargs):
         if self.config_file:
             with open(self.config_file) as json_data:
