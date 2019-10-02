@@ -190,22 +190,84 @@ class TimelineEnrichment(EnrichmentPlugin):
             self.es.delete_by_query(index=TIMELINE_INDEX, body=self.get_query_json(
                 f"target_hostname:{removed_host}"))
 
+
 class BeaconAtrophyEnrichment(EnrichmentPlugin):
     queue_size = 1
 
     def run(self):
         for host in self.get_beacondb_hosts():
-            query =f"target_hostname.keyword:{host} AND NOT beacon_input:*"
-            last_seen = self.run_query("rtops-*", query)[0]["_source"]["@timestamp"]
-
-            query =f"target_hostname.keyword:{host} AND beacon_input:*"
-            last_interaction = self.run_query("rtops-*", query)[0]["_source"]["@timestamp"]
-
-            beacon_atrophy = {
-                "host": host,
-                "last_seen": last_seen,
-                "last_interaction": last_interaction,
-                "atrophy": (date_parser.parse(last_seen) - date_parser.parse(last_interaction)).days
+            last_seen_query = {
+                "query": {
+                    "bool": {
+                        "must": {
+                            "match": {
+                                "target_hostname.keyword": {
+                                    "query": host
+                                }
+                            }
+                        },
+                        "must_not": {
+                            "exists": {
+                                "field": "beacon_input"
+                            }
+                        }
+                    }
+                },
+                "sort": [
+                    {"@timestamp": "desc"}
+                ]
             }
 
-            self.es.index("beacon-atrophy", body=beacon_atrophy)
+            last_interaction_query = {
+                "query": {
+                    "bool": {
+                        "must": {
+                            "match": {
+                                "target_hostname.keyword": {
+                                    "query": host
+                                }
+                            }
+                        },
+                        "filter": {
+                            "term": {
+                                "cslogtype": "beacon_input"
+                            }
+                        }
+                    }
+                },
+                "sort": [
+                    {
+                        "@timestamp": "desc"
+                    }
+                ]
+            }
+
+            #query = f"target_hostname.keyword:{host} AND NOT beacon_input:*"
+            last_seen = self.run_raw_query(
+                "rtops-*", last_seen_query)[0]["_source"]["@timestamp"]
+
+            #query = f"target_hostname.keyword:{host} AND beacon_input:*"
+            last_interaction = self.run_raw_query(
+                "rtops-*", last_interaction_query)[0]["_source"]
+            beacon_atrophy = {
+                "target_hostname": host,
+                "last_seen": last_seen,
+                "last_interaction": last_interaction["@timestamp"],
+                "atrophy": (date_parser.parse(last_seen) - date_parser.parse(last_interaction["@timestamp"])).days,
+                "last_command": last_interaction["beacon_input"],
+                "last_operator": last_interaction["operator"]
+            }
+
+            print(beacon_atrophy)
+
+            try:
+                existing_rec = self.run_query(
+                    "beacon-atrophy", f"target_hostname.keyword:{host}")
+            except:
+                existing_rec = []
+
+            if len(existing_rec) == 0:
+                self.es.index("beacon-atrophy", body=beacon_atrophy)
+            else:
+                existing_rec[0]["_source"].update(beacon_atrophy)
+                self.update(existing_rec[0])
