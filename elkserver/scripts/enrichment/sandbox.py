@@ -18,7 +18,7 @@ class KnownSandboxEnrichment(EnrichmentPlugin):
 
                     new_sandboxes.append(suspect_beacon["_source"]["target_hostname"])
 
-            for state in self.states:
+            for state in self.state:
                 state_fields = state.split(";")
                 keyword = state_fields.pop()
                 for suspect_beacon in self.run_query(index, f" {keyword} ".join(state_fields)):                  
