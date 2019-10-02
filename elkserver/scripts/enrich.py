@@ -301,19 +301,19 @@ if __name__ == '__main__':
     #time.sleep(10) #allow ES to process all updated before requerying
   print("Summary: date: %s, tagsSet: %s, Function:testsystems (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
 
-  sandboxes = readConfigLines('/etc/redelk/known_sandboxes.conf', False)
-  tagsSet = 0
-  rTt = 0
-  for item in sandboxes:
-    numRes = 0
-    r,rT=queryFromConfig(item,"beacondb")
-    setTags('sandboxes_v01',r)
-    r2,rT2=queryFromConfig(item,"rtops-*")
-    setTags('sandboxes_v01',r2)
-    numRes = len(r) + len(r2)
-    tagsSet = tagsSet + numRes
-    rTt = rTt +rT['value'] + rT2['value']
-  print("Summary: date: %s, tagsSet: %s, Function:sandboxes (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
+#  sandboxes = readConfigLines('/etc/redelk/known_sandboxes.conf', False)
+#  tagsSet = 0
+#  rTt = 0
+#  for item in sandboxes:
+#    numRes = 0
+#    r,rT=queryFromConfig(item,"beacondb")
+#    setTags('sandboxes_v01',r)
+#    r2,rT2=queryFromConfig(item,"rtops-*")
+#    setTags('sandboxes_v01',r2)
+#    numRes = len(r) + len(r2)
+#    tagsSet = tagsSet + numRes
+#    rTt = rTt +rT['value'] + rT2['value']
+#  print("Summary: date: %s, tagsSet: %s, Function:sandboxes (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
 
   ipList = '/etc/redelk/torexitnodes.conf'
   tagsSet = 0
