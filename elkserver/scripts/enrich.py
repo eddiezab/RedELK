@@ -283,23 +283,23 @@ def deleteTag(tag,size=qSize,index="redirhaproxy-*"):
 
 ####
 if __name__ == '__main__':
-  testsystems = readConfigLines('/etc/redelk/known_testsystems.conf', False)
-  tagsSet = 0
-  rTt = 0
-  for item in testsystems:
-    numRes = 0
-    #while numRes > 0:
-    #sys.stdout.write('.')
-    #sys.stdout.flush()
-    r,rT=queryFromConfig(item,"beacondb")
-    setTags('testsystems_v01',r)
-    r2,rT2=queryFromConfig(item,"rtops-*")
-    setTags('testsystems_v01',r2)
-    numRes = len(r) + len(r2)
-    tagsSet = tagsSet + numRes
-    rTt = rTt +rT['value'] + rT2['value']
-    #time.sleep(10) #allow ES to process all updated before requerying
-  print("Summary: date: %s, tagsSet: %s, Function:testsystems (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
+#  testsystems = readConfigLines('/etc/redelk/known_testsystems.conf', False)
+#  tagsSet = 0
+#  rTt = 0
+#  for item in testsystems:
+#    numRes = 0
+#    #while numRes > 0:
+#    #sys.stdout.write('.')
+#    #sys.stdout.flush()
+#    r,rT=queryFromConfig(item,"beacondb")
+#    setTags('testsystems_v01',r)
+#    r2,rT2=queryFromConfig(item,"rtops-*")
+#    setTags('testsystems_v01',r2)
+#    numRes = len(r) + len(r2)
+#    tagsSet = tagsSet + numRes
+#    rTt = rTt +rT['value'] + rT2['value']
+#    #time.sleep(10) #allow ES to process all updated before requerying
+#  print("Summary: date: %s, tagsSet: %s, Function:testsystems (total to tag is %s)"%(datetime.datetime.now(),tagsSet,rTt))
 
 #  sandboxes = readConfigLines('/etc/redelk/known_sandboxes.conf', False)
 #  tagsSet = 0
