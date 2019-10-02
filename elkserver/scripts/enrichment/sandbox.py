@@ -61,7 +61,7 @@ class KnownSandboxEnrichment(KnownAssetEnrichment):
          
     def raise_alert(self):
         if len(self.new_assets) > 0:
-            sandboxes = ", ".join(self.new_assets)
+            sandboxes = ", ".join(list(set(self.new_assets)))
             self.alarm("SANDBOX ALERT", f"The following system(s) appear to be sandboxes connecting to teamservers: {sandboxes}")
 
 
