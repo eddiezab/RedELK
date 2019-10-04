@@ -16,7 +16,7 @@ class IOCEnrichment(EnrichmentPlugin):
             "size": "0",
             "aggs": {
                 "ioc_checksums": {
-                    "terms": {"field": "ioc_hash.keyword"}
+                    "terms": {"field": "ioc_hash.keyword", "size": 1000}
                 }
             }
         }
@@ -44,28 +44,30 @@ class IOCEnrichment(EnrichmentPlugin):
         checkable_iocs = self.get_checkable_iocs()
 
         max_len = len(checkable_iocs) if len(checkable_iocs) <=5 else 5
+
+        alert_iocs = []
+        
         while max_len != 0:
             idx = 0
             process_slice = []
             while idx < max_len:
                 process_slice.append(checkable_iocs.pop())
                 idx += 1
-            self.check_vt(process_slice)
+            alert_iocs.extend(self.check_vt(process_slice))
 
             max_len = len(checkable_iocs) if len(checkable_iocs) <=5 else 5
 
-
-
-
-
+        if len(alert_iocs) > 0:
+            ioc_files = ", ".join(list(set(alert_iocs)))
+            self.alarm("IOCs Reported", f"The following IOCs have been reported to VT recently: {ioc_files}")
 
     def get_checkable_iocs(self):
         check_time = datetime.now()
         untriggered_iocs = []
         for ioc in self.run_query("custom-ioc", "NOT date_submitted:*"):
             if "last_checked" in ioc["_source"]:
-                ioc["_source"]["last_checked"] = check_time.strftime("%Y-%m-%dT%H:%M:%S")
                 last_check_time = date_parser.parse(ioc["_source"]["last_checked"])
+                ioc["_source"]["last_checked"] = check_time.strftime("%Y-%m-%dT%H:%M:%S")
                 if (check_time - last_check_time).total_seconds() >= (15 * 60):
                     untriggered_iocs.append(ioc)
             else:
@@ -74,13 +76,12 @@ class IOCEnrichment(EnrichmentPlugin):
 
         return untriggered_iocs
 
-
     def update_ioc_index(self,md5s):
         query = {
             "size": "0",
             "aggs": {
                 "ioc_checksums": {
-                    "terms": {"field": "md5.keyword"}
+                    "terms": {"field": "md5.keyword","size": 1000}
                 }
             }
         }
@@ -119,18 +120,13 @@ class IOCEnrichment(EnrichmentPlugin):
 
         alert_iocs = []
 
-        for ioc in iocs:            
-            for vt_ioc in json_response:
-                if vt_ioc["resource"] == ioc["_source"]["md5"]:
-                    ioc["_source"]["vt"] = vt_ioc
+        for vt_ioc in json_response:
+            ioc = list(filter(lambda ioc: vt_ioc["resource"] == ioc["_source"]["md5"], iocs))[0]
+            ioc["_source"]["vt"] = vt_ioc
 
-                    if "positives" in vt_ioc and vt_ioc["positives"] > 0:
-                        if "date_submitted" not in ioc["_source"]:
-                            alert_iocs.extend(ioc["_source"]["filenames"])
-                        ioc["_source"]["date_submitted"] = date_parser.parse(vt_ioc["scan_date"]).strftime("%Y-%m-%dT%H:%M:%S")
-                    self.update(ioc)
-                    continue
+            if "positives" in vt_ioc and vt_ioc["positives"] > 0:
+                alert_iocs.extend(ioc["_source"]["filenames"])
+                ioc["_source"]["date_submitted"] = date_parser.parse(vt_ioc["scan_date"]).strftime("%Y-%m-%dT%H:%M:%S")
+            self.update(ioc)
 
-        if len(alert_iocs) > 0:
-            ioc_files = ", ".join(list(set(alert_iocs)))
-            self.alarm("IOCs Reported", f"The following IOCs have been reported to VT recently: {ioc_files}")
+        return alert_iocs
