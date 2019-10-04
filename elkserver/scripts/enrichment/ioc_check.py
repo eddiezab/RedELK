@@ -131,5 +131,5 @@ class IOCEnrichment(EnrichmentPlugin):
                     continue
 
         if len(alert_iocs) > 0:
-            ioc_files = ", ".join(alert_iocs)
+            ioc_files = ", ".join(list(set(alert_iocs)))
             self.alarm("IOCs Reported", f"The following IOCs have been reported to VT recently: {ioc_files}")
