@@ -58,8 +58,8 @@ class IOCEnrichment(EnrichmentPlugin):
             max_len = len(checkable_iocs) if len(checkable_iocs) <=5 else 5
 
         if len(alert_iocs) > 0:
-            ioc_files = ", ".join(list(set(alert_iocs)))
-            self.alarm("IOCs Reported", f"The following IOCs have been reported to VT recently: {ioc_files}")
+            ioc_files = "\n".join(list(set(alert_iocs)))
+            self.alarm("IOCs Reported", f"The following IOCs have been reported to VT recently:\n{ioc_files}")
 
     def get_checkable_iocs(self):
         check_time = datetime.now()
