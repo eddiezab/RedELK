@@ -46,8 +46,12 @@ class EnrichmentPlugin(object):
         result = self.es.search(
             index=index_pattern,
             size=self.queue_size,
-            body=query
+            body=query,
+            ignore=[400, 404]
         )
+
+        if 'error' in result and (result['status'] == 400 or result['status'] == 404):
+            return []
 
         if transform_result:
             return transform_result(result)
