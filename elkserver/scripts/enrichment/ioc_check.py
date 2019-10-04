@@ -117,6 +117,8 @@ class IOCEnrichment(EnrichmentPlugin):
         else:
             json_response = None
 
+        alert_iocs = []
+
         for ioc in iocs:            
             for vt_ioc in json_response:
                 if vt_ioc["resource"] == ioc["_source"]["md5"]:
@@ -125,4 +127,9 @@ class IOCEnrichment(EnrichmentPlugin):
                     if "positives" in vt_ioc and vt_ioc["positives"] > 0:
                         ioc["_source"]["date_submitted"] = date_parser.parse(vt_ioc["scan_date"]).strftime("%Y-%m-%dT%H:%M:%S")
                     self.update(ioc)
+                    alert_iocs.append(ioc["_source"]["filenames"])
                     continue
+
+        if len(alert_iocs) > 0:
+            ioc_files = ", ".join(alert_iocs)
+            self.alarm("IOCs Reported", f"The following IOCs have been reported to VT recently: {ioc_files}")
