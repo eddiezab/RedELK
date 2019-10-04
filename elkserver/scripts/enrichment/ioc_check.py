@@ -127,7 +127,7 @@ class IOCEnrichment(EnrichmentPlugin):
                     if "positives" in vt_ioc and vt_ioc["positives"] > 0:
                         ioc["_source"]["date_submitted"] = date_parser.parse(vt_ioc["scan_date"]).strftime("%Y-%m-%dT%H:%M:%S")
                     self.update(ioc)
-                    alert_iocs.append(ioc["_source"]["filenames"])
+                    alert_iocs.extend(ioc["_source"]["filenames"])
                     continue
 
         if len(alert_iocs) > 0:
