@@ -68,7 +68,7 @@ class IOCEnrichment(EnrichmentPlugin):
             if "last_checked" in ioc["_source"]:
                 last_check_time = date_parser.parse(ioc["_source"]["last_checked"])
                 ioc["_source"]["last_checked"] = check_time.strftime("%Y-%m-%dT%H:%M:%S")
-                if (check_time - last_check_time).total_seconds() >= (15 * 60):
+                if (check_time - last_check_time).total_seconds() >= (30 * 60):
                     untriggered_iocs.append(ioc)
             else:
                 ioc["_source"]["last_checked"] = check_time.strftime("%Y-%m-%dT%H:%M:%S")
